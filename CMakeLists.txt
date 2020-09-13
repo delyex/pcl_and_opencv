@@ -3,7 +3,7 @@
 #
 cmake_minimum_required (VERSION 3.8)
 
-project ("point_cloud2png")
+project ("pcl_and_opencv")
 
 # Include sub-projects.
 add_subdirectory ("src")

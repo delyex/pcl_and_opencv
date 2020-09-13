@@ -16,8 +16,9 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 
 aux_source_directory(./ SRC)
 # Add source to this project's executable.
-add_executable (organized ${SRC}) 
+add_executable (${SRC} "gocator_point_cloud.cpp") 
 
 # Link
 target_link_libraries(organized ${PCL_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBRARIES})
 # TODO: Add tests and install targets if needed.
+

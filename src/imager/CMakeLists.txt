@@ -12,8 +12,8 @@ include_directories(${PCL_INCLUDE_DIRS})
 include_directories(${Boost_INCLUDE_DIRS})
 
 # Add source to this project's executable.
-add_executable (organized "point_cloud2png.cpp" "point_cloud2png.h")
+add_executable (imager "point_cloud2png.cpp" "point_cloud2png.h")
 
 # Link
-target_link_libraries(organized ${PCL_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(imager ${PCL_LIBRARIES} ${Boost_LIBRARIES})
 # TODO: Add tests and install targets if needed.
