@@ -21,17 +21,21 @@ int gocator::GocatorPointCloud::SetPath(const std::string& path)
 	return 0;
 }
 
+/// @brief 将文件中的点云坐标读取为 PCL 点云
+/// @param name 要读取的文件名称，需要用 @function SetPath 先设置路径
+/// @param pointClouds 点云数据集，包含当前文件中的所有廓形
+/// @return 
 int GocatorPointCloud::LoadFile(const std::string& name, std::vector<PointCloud<PointXYZ>::Ptr>& pointClouds)
 {
-	m_fileName = name;
-	mapped_file_source file; // 当前打开的 2D 激光数据文件
+	m_fileName = name; // 当前文件的名称
+	mapped_file_source file; ///< 当前打开的 2D 激光数据文件
 
-	uint64_t ullLen;
-	uint64_t ullPos = 0;
+	uint64_t ullLen; ///< 数据长度，单位：字节
+	uint64_t ullPos = 0; ///< 当前文件所在位置，单位：字节
 
-	file.open(m_filePath + "/" + name);
-	ullLen = file.size();
-	while ((ullLen - ullPos) >= 20)
+	file.open(m_filePath + "/" + name); // 打开文件
+	ullLen = file.size(); // 获取文件长度
+	while ((ullLen - ullPos) >= 20) // 没有到达文件尾部
 	{
 		memcpy(&m_s_LaserInput.s_Hdr, file.data() + ullPos, 20); // 读取帧数据头部
 		ullPos += 20;
@@ -39,17 +43,17 @@ int GocatorPointCloud::LoadFile(const std::string& name, std::vector<PointCloud<
 		memcpy(m_s_LaserInput.ps_Buffer, file.data() + ullPos, m_s_LaserInput.s_Hdr.uiValidPointCount * sizeof(PROFILE_POINT)); // 读取帧数据
 		ullPos += (uint64_t)m_s_LaserInput.s_Hdr.uiValidPointCount * sizeof(PROFILE_POINT);
 
-		PointCloud<PointXYZ> cloud;
-		cloud.width = m_s_LaserInput.s_Hdr.uiValidPointCount;
+		PointCloud<PointXYZ> cloud; ///< 将读取点云数据保存到 PCL 点云
+		cloud.width = m_s_LaserInput.s_Hdr.uiValidPointCount; // 设置点云属性
 		cloud.height = 1;
 		cloud.resize(cloud.width);
 		for (size_t i = 0; i < cloud.width; i++)
 		{
-			cloud.points[i].x = m_s_LaserInput.ps_Buffer[i].x;
+			cloud.points[i].x = m_s_LaserInput.ps_Buffer[i].x; // PCL 点云数据拷贝
 			cloud.points[i].y = -m_s_LaserInput.ps_Buffer[i].z;
 			cloud.points[i].z = 0.0;
 		}
-		pointClouds.push_back(cloud.makeShared());
+		pointClouds.push_back(cloud.makeShared()); // 点云保存到点云数据集
 	}
 
 	file.close();				  // 关闭文件
@@ -93,32 +97,35 @@ cv::Mat gocator::GocatorPointCloud::PointCloud2Mat(pcl::PointCloud<pcl::PointXYZ
 
 	std::string dimen1, dimen2;
 	float dimen1Max = 0.0, dimen1Min = 0.0, dimen2Min = 0.0, dimen2Max = 0.0;
-	if (dimensionToRemove == "x")
+	switch (*dimensionToRemove.c_str())
 	{
-		dimen1 = "y";
-		dimen2 = "z";
-		dimen1Min = cloudMin.y;
-		dimen1Max = cloudMax.y;
-		dimen2Min = cloudMin.z;
-		dimen2Max = cloudMax.z;
-	}
-	else if (dimensionToRemove == "y")
-	{
+	case 'y':
+		// 从 Y 轴看
 		dimen1 = "x";
 		dimen2 = "z";
 		dimen1Min = cloudMin.x;
 		dimen1Max = cloudMax.x;
 		dimen2Min = cloudMin.z;
 		dimen2Max = cloudMax.z;
-	}
-	else if (dimensionToRemove == "z")
-	{
+		break;
+	case 'z':
+		// 从 Z 轴看
 		dimen1 = "x";
 		dimen2 = "y";
 		dimen1Min = cloudMin.x;
 		dimen1Max = cloudMax.x;
 		dimen2Min = cloudMin.y;
 		dimen2Max = cloudMax.y;
+		break;
+	default:
+		// 从 X 轴看
+		dimen1 = "y";
+		dimen2 = "z";
+		dimen1Min = cloudMin.y;
+		dimen1Max = cloudMax.y;
+		dimen2Min = cloudMin.z;
+		dimen2Max = cloudMax.z;
+		break;
 	}
 
 	std::vector<std::vector<int>> pointCountGrid; ///< 网格内的点数
@@ -136,9 +143,9 @@ cv::Mat gocator::GocatorPointCloud::PointCloud2Mat(pcl::PointCloud<pcl::PointXYZ
 			pcl::PointCloud<pcl::PointXYZ>::Ptr grid_cell = passThroughFilter1D(slice, dimen2, j, j + stepSize2); ///< 将网格切片分割为网格单元
 
 			int gridSize = grid_cell->size();
-			slicePointCount.push_back(gridSize); ///< 保存网格单元点数
+			slicePointCount.push_back(gridSize); // 保存网格单元点数
 		}
-		pointCountGrid.push_back(slicePointCount);
+		pointCountGrid.push_back(slicePointCount); // 将切片中包含的点数存入网格
 	}
 
 	cv::Mat mat(static_cast<int>(pointCountGrid.at(0).size()), static_cast<int>(pointCountGrid.size()), CV_8UC1);

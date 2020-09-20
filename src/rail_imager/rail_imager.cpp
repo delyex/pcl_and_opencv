@@ -26,17 +26,16 @@ int main()
 {
 	GocatorPointCloud cloud;
 	string path = "D:/大轨检数据/上海地铁/0620/下行第三轮";
-	string name = "GOCATOR0_20200620_120547.dat";
+	string name = "GOCATOR1_20200620_120548.dat";
 	vector<PointCloud<PointXYZ>::Ptr> clouds;
 
 	cloud.SetPath(path);
 	TicToc tt;
-	cloud.LoadFile(name, clouds);
+	cloud.LoadFile(name, clouds); // 将文件中的点云信息一次性全部读取到 clouds 中
 	for (size_t i = 0; i < clouds.size(); i++)
 	{
 		tt.tic();
-		// TODO: 转换为图片
-		cv::Mat mat = cloud.PointCloud2Mat(clouds[i]);
+		cv::Mat mat = cloud.PointCloud2Mat(clouds[i]); // 讲 PCL 点云转换为 OpenCV::Mat
 		std::string screenshots_dir = path + "/screenshots/";
 		boost::filesystem::create_directory(screenshots_dir);
 
